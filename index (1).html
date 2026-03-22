@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0c10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Silver Master">
+<meta name="application-name" content="Silver Master">
+<meta name="description" content="Silver XAG/USD Trading Dashboard — Spike Strategy">
+<title>Silver Master</title>
+
+<!-- PWA Manifest inline via data URI -->
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Silver%20Master%20Trading%22%2C%22short_name%22%3A%22Silver%20Master%22%2C%22description%22%3A%22Silver%20XAG/USD%20Spike%20Trading%20Dashboard%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0c10%22%2C%22theme_color%22%3A%22%230a0c10%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg+xml%2C%253Csvg+xmlns%3D'http%3A//www.w3.org/2000/svg'+viewBox%3D'0+0+512+512'%253E%253Crect+width%3D'512'+height%3D'512'+rx%3D'100'+fill%3D'%23e84040'/%253E%253Ctext+x%3D'50%25'+y%3D'60%25'+text-anchor%3D'middle'+dominant-baseline%3D'middle'+font-size%3D'300'+font-weight%3D'900'+fill%3D'white'+font-family%3D'monospace'%253EAg%253C/text%253E%253C/svg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image/svg+xml%22%2C%22purpose%22%3A%22any+maskable%22%7D%5D%7D">
+
+<!-- Apple Touch Icon -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23e84040'/><text x='50%25' y='60%25' text-anchor='middle' dominant-baseline='middle' font-size='300' font-weight='900' fill='white' font-family='monospace'>Ag</text></svg>">
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0a0c10;--sur:#111318;--s2:#181c23;--s3:#1e2330;
+  --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
+  --red:#e84040;--grn:#2ecc71;--gld:#f0b429;--blu:#4a9eff;
+  --pur:#a78bfa;--org:#ff8c42;
+  --txt:#f0f2f5;--mut:#6b7280;--m2:#9ca3af;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{height:100%;overscroll-behavior:none;}
+body{background:var(--bg);color:var(--txt);font-family:'Syne',sans-serif;height:100%;overflow:hidden;position:fixed;width:100%;}
+
+/* LAYOUT */
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top);}
+.hdr{background:rgba(10,12,16,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--brd);padding:11px 15px;flex-shrink:0;}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
+.bnav{background:rgba(10,12,16,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--brd);flex-shrink:0;padding-bottom:var(--safe-bot);}
+
+/* HEADER */
+.hdr-row{display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-sq{width:30px;height:30px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:'Space Mono',monospace;flex-shrink:0;}
+.logo-t{font-size:13px;font-weight:800;letter-spacing:2px;}
+.logo-s{font-size:7px;color:var(--mut);letter-spacing:3px;margin-top:1px;}
+.prices-row{display:flex;gap:5px;align-items:center;}
+.pc{background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:4px 7px;text-align:center;min-width:56px;}
+.pc-s{font-size:6px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;}
+.pc-v{font-size:11px;font-weight:700;font-family:'Space Mono',monospace;}
+.pc-c{font-size:7px;margin-top:1px;}
+.lv{display:flex;align-items:center;gap:4px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.25);border-radius:20px;padding:3px 7px;font-size:7px;color:var(--grn);}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pu 1.5s infinite;}
+@keyframes pu{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* BOTTOM NAV */
+.bnav-row{display:flex;}
+.nb{flex:1;padding:9px 0 7px;text-align:center;cursor:pointer;transition:opacity 0.15s;border:none;background:transparent;}
+.nb:active{opacity:0.6;}
+.nb-i{font-size:19px;line-height:1;display:block;}
+.nb-l{font-size:7px;color:var(--mut);margin-top:2px;letter-spacing:0.5px;display:block;}
+.nb.on .nb-l{color:var(--red);}
+
+/* MAIN CONTENT */
+.main{padding:13px 14px 20px;}
+.sec{display:none;animation:fadeIn 0.2s ease;}
+.sec.on{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* CARDS */
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:12px;padding:13px 14px;margin-bottom:10px;}
+.ct{font-size:8px;font-weight:700;letter-spacing:2px;color:var(--mut);margin-bottom:9px;text-transform:uppercase;}
+.cbig{font-size:22px;font-weight:800;font-family:'Space Mono',monospace;}
+.csub{font-size:9px;color:var(--mut);margin-top:2px;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.stat{background:var(--s2);border-radius:9px;padding:10px 5px;text-align:center;}
+.sv{font-size:16px;font-weight:800;font-family:'Space Mono',monospace;line-height:1.2;}
+.sl{font-size:7px;color:var(--mut);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+
+/* TAGS */
+.tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.tr{background:rgba(232,64,64,0.15);color:var(--red);border:1px solid rgba(232,64,64,0.3);}
+.tg{background:rgba(46,204,113,0.15);color:var(--grn);border:1px solid rgba(46,204,113,0.3);}
+.to{background:rgba(240,180,41,0.15);color:var(--gld);border:1px solid rgba(240,180,41,0.3);}
+.tb{background:rgba(74,158,255,0.15);color:var(--blu);border:1px solid rgba(74,158,255,0.3);}
+.tgr{background:rgba(107,114,128,0.15);color:var(--m2);border:1px solid rgba(107,114,128,0.3);}
+.tp{background:rgba(167,139,250,0.15);color:var(--pur);border:1px solid rgba(167,139,250,0.3);}
+
+/* ROWS */
+.row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--brd);}
+.row:last-child{border-bottom:none;}
+.rd{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.rt{font-size:11px;line-height:1.6;color:var(--txt);}
+.rt b{font-weight:700;}
+.div{border:none;border-top:1px solid var(--brd);margin:9px 0;}
+
+/* ALERTS */
+.alert{border-radius:9px;padding:9px 12px;font-size:11px;line-height:1.7;margin-bottom:8px;}
+.alert b{font-weight:700;}
+.ar{background:rgba(232,64,64,0.1);border:1px solid rgba(232,64,64,0.25);color:#ff8080;}
+.ag{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.25);color:#6deca9;}
+.ao{background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);color:#f5ca6a;}
+.ab{background:rgba(74,158,255,0.1);border:1px solid rgba(74,158,255,0.25);color:#7ab8ff;}
+.ap{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);color:#c4b5fd;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:10px;}
+.tbl th{padding:5px 7px;text-align:left;color:var(--mut);font-size:7px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--brd);}
+.tbl td{padding:6px 7px;border-bottom:1px solid var(--brd);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+
+/* INPUTS & BUTTONS */
+.inp{width:100%;background:var(--s2);border:1px solid var(--brd2);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Space Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+.inp:focus{border-color:var(--red);}
+.inp::placeholder{color:var(--mut);}
+.btn{width:100%;padding:12px;border-radius:9px;border:none;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:1px;font-family:'Syne',sans-serif;transition:all 0.15s;}
+.btn:active{transform:scale(0.97);}
+.btn-r{background:var(--red);color:white;}
+.btn-g{background:var(--grn);color:white;}
+.btn-p{background:var(--pur);color:white;}
+.btn-s{background:var(--s3);border:1px solid var(--brd2);color:var(--m2);}
+
+/* AI BOX */
+.ai-bx{background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(74,158,255,0.05));border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:13px 14px;margin-bottom:10px;}
+.ai-hd{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+.ai-ic{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#a78bfa,#4a9eff);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ai-t{font-size:12px;font-weight:700;}
+.ai-s{font-size:8px;color:var(--mut);}
+.ai-c{font-size:11px;line-height:1.8;color:var(--m2);}
+.ai-c b{color:var(--txt);font-weight:700;}
+
+/* CHECKLIST */
+.ci{display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:8px;cursor:pointer;}
+.ci:active{background:var(--s2);}
+.cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--brd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all 0.15s;}
+.cb.on{background:var(--grn);border-color:var(--grn);color:white;}
+.ctxt{font-size:11px;color:var(--m2);transition:all 0.15s;}
+.ci.dn .ctxt{text-decoration:line-through;color:var(--mut);}
+
+/* METER */
+.mbar{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-top:4px;}
+.mfill{height:100%;border-radius:3px;transition:width 0.6s;}
+
+/* SCORES */
+.scores{display:flex;align-items:center;justify-content:space-around;padding:8px 0;}
+.sc{text-align:center;}
+.scv{font-size:26px;font-weight:800;font-family:'Space Mono',monospace;}
+.scl{font-size:7px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* DAY PILLS */
+.dpills{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:13px;}
+.dpills::-webkit-scrollbar{display:none;}
+.dp{flex-shrink:0;padding:7px 11px;border-radius:8px;border:1px solid var(--brd);background:var(--sur);cursor:pointer;}
+.dp .dn{font-size:10px;font-weight:700;}
+.dp .da{font-size:7px;color:var(--mut);}
+
+/* CALC RESULT */
+.cres{background:var(--s2);border-radius:9px;padding:10px 12px;margin-top:8px;}
+.cline{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid var(--brd);}
+.cline:last-child{border-bottom:none;}
+.ck{color:var(--mut);}
+.cv{font-family:'Space Mono',monospace;font-weight:700;}
+
+/* INSTALL BANNER */
+.install-banner{background:linear-gradient(135deg,rgba(46,204,113,0.12),rgba(74,158,255,0.08));border:1px solid rgba(46,204,113,0.25);border-radius:12px;padding:13px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.install-text .it{font-size:12px;font-weight:700;color:var(--grn);}
+.install-text .is{font-size:10px;color:var(--m2);margin-top:2px;}
+.install-btn{background:var(--grn);color:white;border:none;border-radius:8px;padding:9px 14px;font-size:10px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.install-btn:active{transform:scale(0.96);}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="logo">
+      <div class="logo-sq">Ag</div>
+      <div><div class="logo-t">SILVER MASTER</div><div class="logo-s">TRADING APP</div></div>
+    </div>
+    <div class="prices-row">
+      <div class="pc"><div class="pc-s">XAG/USD</div><div class="pc-v" id="h-xag" style="color:var(--gld);">---</div><div class="pc-c" id="h-xag-c">--</div></div>
+      <div class="pc"><div class="pc-s">XAU/USD</div><div class="pc-v" id="h-xau" style="color:var(--gld);">---</div><div class="pc-c" id="h-xau-c">--</div></div>
+      <div class="lv"><div class="ld"></div>LIVE</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+<div class="main">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="sec on" id="s-dash">
+  <div id="install-zone"></div>
+  <div id="day-banner"></div>
+  <div class="g3" style="margin-bottom:10px;">
+    <div class="stat"><div class="sv" id="cd-t" style="color:var(--red);font-size:13px;">--:--</div><div class="sl">Avant Spike</div></div>
+    <div class="stat"><div class="sv" id="cd-p" style="color:var(--gld);font-size:14px;">---</div><div class="sl">XAG Live</div></div>
+    <div class="stat"><div class="sv" id="cd-r" style="color:var(--pur);font-size:14px;">---</div><div class="sl">Ratio Au/Ag</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Score du jour</div>
+    <div class="scores">
+      <div class="sc"><div class="scv" id="sc-t" style="color:var(--blu);">--</div><div class="scl">Tech.</div></div>
+      <div class="sc"><div class="scv" id="sc-f" style="color:var(--gld);">--</div><div class="scl">Fond.</div></div>
+      <div class="sc"><div class="scv" id="sc-g" style="color:var(--grn);font-size:34px;">--</div><div class="scl">Global</div></div>
+    </div>
+    <div id="sc-v" class="alert ao" style="text-align:center;font-size:10px;"></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Technique</div><div id="d-tech"></div></div>
+    <div class="card"><div class="ct">Fondamental</div><div id="d-fond"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Checklist matinale <span id="chk-p" style="color:var(--grn);font-size:9px;"></span></div>
+    <div id="chklist"></div>
+  </div>
+  <div class="card"><div class="ct">Alertes du jour</div><div id="d-alerts"></div></div>
+</div>
+
+<!-- ══ IA ══ -->
+<div class="sec" id="s-ai">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div><div style="font-size:17px;font-weight:800;">Analyse du jour</div><div style="font-size:9px;color:var(--mut);">100% intégrée • Hors ligne • Automatique</div></div>
+    <button class="btn btn-p" style="width:auto;padding:8px 13px;font-size:9px;" onclick="runAI()">↻ Actualiser</button>
+  </div>
+  <div style="font-size:8px;color:var(--mut);font-family:'Space Mono';margin-bottom:10px;" id="ai-dt"></div>
+  <div class="ai-bx">
+    <div class="ai-hd"><div class="ai-ic">🤖</div><div><div class="ai-t">Analyse du jour</div><div class="ai-s" id="ai-ts">En attente...</div></div></div>
+    <div class="ai-c" id="ai-txt"><span style="color:var(--mut);">Clique sur Actualiser pour générer l'analyse.</span></div>
+  </div>
+  <div class="g2" style="margin-bottom:10px;">
+    <div class="ai-bx" style="margin-bottom:0;">
+      <div class="ai-hd"><div class="ai-ic" style="background:linear-gradient(135deg,var(--red),var(--org));">📊</div><div><div class="ai-t">Biais</div><div class="ai-s">Direction</div></div></div>
+      <div id="ai-b" style="font-size:14px;font-weight:800;color:var(--mut);">---</div>
+    </div>
+    <div class="ai-bx" style="margin-bottom:0;">
+      <div class="ai-hd"><div class="ai-ic" style="background:linear-gradient(135deg,var(--gld),var(--org));">⚠️</div><div><div class="ai-t">Risque</div><div class="ai-s">Niveau</div></div></div>
+      <div id="ai-r" style="font-size:14px;font-weight:800;color:var(--mut);">---</div>
+    </div>
+  </div>
+  <div class="card"><div class="ct">Conseils du jour</div><div id="ai-tips" style="font-size:11px;color:var(--mut);font-style:italic;">Lancer l'analyse...</div></div>
+</div>
+
+<!-- ══ TECHNIQUE ══ -->
+<div class="sec" id="s-tech">
+  <div style="font-size:17px;font-weight:800;margin-bottom:4px;">Analyse Technique</div>
+  <div style="font-size:9px;color:var(--mut);margin-bottom:13px;">Spike asiatique • Sessions • Confirmations</div>
+  <div class="dpills" id="dpills"></div>
+  <div id="tech-c"></div>
+</div>
+
+<!-- ══ FONDAMENTALE ══ -->
+<div class="sec" id="s-fond">
+  <div style="font-size:17px;font-weight:800;margin-bottom:4px;">Fondamentale</div>
+  <div style="font-size:9px;color:var(--mut);margin-bottom:13px;">FED • DXY • Industrie • Géopolitique</div>
+  <div class="card">
+    <div class="ct">Données Live <span class="ld" style="display:inline-block;"></span></div>
+    <div class="g4">
+      <div class="stat"><div class="sv" id="f-xag" style="color:var(--gld);font-size:13px;">---</div><div class="sl">XAG</div></div>
+      <div class="stat"><div class="sv" id="f-xau" style="color:var(--gld);font-size:13px;">---</div><div class="sl">XAU</div></div>
+      <div class="stat"><div class="sv" id="f-dxy" style="color:var(--blu);font-size:13px;">---</div><div class="sl">DXY</div></div>
+      <div class="stat"><div class="sv" id="f-rat" style="color:var(--pur);font-size:13px;">---</div><div class="sl">Ratio</div></div>
+    </div>
+    <button class="btn btn-s" style="margin-top:8px;font-size:9px;" onclick="fetchPrices()">↻ Actualiser les prix</button>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">🏦 FED</div>
+      <div class="cbig" style="color:var(--red);">3.5-3.75%</div>
+      <div class="csub">Inchangé • 1 baisse 2026</div>
+      <div class="div"></div>
+      <div style="font-size:7px;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:3px;"><span>Hawkish</span><span>Dovish</span></div>
+      <div class="mbar"><div class="mfill" style="width:35%;background:var(--red);"></div></div>
+      <div class="div"></div>
+      <div class="row"><div class="rd" style="background:var(--red);"></div><div class="rt">FED baisse → <b>Silver ↑ fort</b></div></div>
+    </div>
+    <div class="card">
+      <div class="ct">💵 DXY Dollar</div>
+      <div class="cbig" id="f-dxy2" style="color:var(--blu);">---</div>
+      <div class="csub" id="f-dxy-d">Chargement...</div>
+      <div class="div"></div>
+      <div style="font-size:7px;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:3px;"><span>Fort (↓Ag)</span><span>Faible (↑Ag)</span></div>
+      <div class="mbar"><div id="dxy-m" class="mfill" style="width:50%;background:var(--gld);"></div></div>
+      <div class="div"></div>
+      <div class="row"><div class="rd" style="background:var(--blu);"></div><div class="rt">DXY ↑ = Silver ↓ <b>(INVERSE)</b></div></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">⚡ Industrie</div>
+      <div class="cbig" style="color:var(--grn);">117M oz</div>
+      <div class="csub">Déficit 6ème année</div>
+      <div class="div"></div>
+      <div class="row"><div class="rd" style="background:var(--gld);"></div><div class="rt">Panneaux solaires 200M oz</div></div>
+      <div class="row"><div class="rd" style="background:var(--grn);"></div><div class="rt">Plancher de prix solide</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">🌍 Géopolitique</div>
+      <div class="cbig" style="color:var(--red);">RISQUE ↑</div>
+      <div class="csub">Iran/USA • Refuge actif</div>
+      <div class="div"></div>
+      <div class="row"><div class="rd" style="background:var(--red);"></div><div class="rt">Guerre Iran/USA active</div></div>
+      <div class="row"><div class="rd" style="background:var(--grn);"></div><div class="rt">Or : <span id="f-or">chargement...</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Matrice de décision</div>
+    <table class="tbl">
+      <thead><tr><th>Condition</th><th>Biais</th><th>Lots</th></tr></thead>
+      <tbody>
+        <tr><td>FED baisse + DXY faible</td><td><span class="tag tg">HAUSSIER FORT</span></td><td class="mono" style="color:var(--grn);font-family:'Space Mono';">0.05</td></tr>
+        <tr><td>FED maintient + DXY faible</td><td><span class="tag tg">HAUSSIER</span></td><td class="mono" style="color:var(--grn);font-family:'Space Mono';">0.03</td></tr>
+        <tr><td>FED maintient + DXY fort</td><td><span class="tag tgr">NEUTRE</span></td><td class="mono" style="color:var(--gld);font-family:'Space Mono';">0.01</td></tr>
+        <tr style="background:rgba(232,64,64,0.06);"><td><b>FED / CPI / NFP</b></td><td><span class="tag tr">DANGER</span></td><td style="color:var(--red);font-family:'Space Mono';font-size:10px;">0.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CALCULATEUR ══ -->
+<div class="sec" id="s-calc">
+  <div style="font-size:17px;font-weight:800;margin-bottom:4px;">Calculateur Spike</div>
+  <div style="font-size:9px;color:var(--mut);margin-bottom:13px;">4 positions automatiques • SL et TP inclus</div>
+  <div class="alert ab" style="margin-bottom:12px;">XAG live : <b id="c-live" style="font-family:'Space Mono';color:var(--gld);">---</b></div>
+  <div class="card" style="margin-bottom:10px;">
+    <div class="ct" style="color:var(--red);">SELL — Haut Asiatique</div>
+    <input class="inp" id="si" type="number" step="0.001" placeholder="Ex: 82.535" oninput="cSell()">
+    <button class="btn btn-r" style="margin-top:7px;" onclick="cSell()">CALCULER SELL ↓</button>
+    <div class="cres" id="sr" style="display:none;"></div>
+  </div>
+  <div class="card">
+    <div class="ct" style="color:var(--grn);">BUY — Bas Asiatique</div>
+    <input class="inp" id="bi" type="number" step="0.001" placeholder="Ex: 81.376" oninput="cBuy()">
+    <button class="btn btn-g" style="margin-top:7px;" onclick="cBuy()">CALCULER BUY ↑</button>
+    <div class="cres" id="br" style="display:none;"></div>
+  </div>
+  <div class="card">
+    <div class="ct">Stats spikes réels</div>
+    <div class="g4">
+      <div class="stat"><div class="sv" style="color:var(--red);font-size:13px;">149</div><div class="sl">SELL moy</div></div>
+      <div class="stat"><div class="sv" style="color:var(--grn);font-size:13px;">153</div><div class="sl">BUY moy</div></div>
+      <div class="stat"><div class="sv" style="color:var(--gld);font-size:13px;">85</div><div class="sl">Min pips</div></div>
+      <div class="stat"><div class="sv" style="color:var(--blu);font-size:13px;">490</div><div class="sl">Max pips</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STRATÉGIE ══ -->
+<div class="sec" id="s-strat">
+  <div style="font-size:17px;font-weight:800;margin-bottom:4px;">Stratégie</div>
+  <div style="font-size:9px;color:var(--mut);margin-bottom:13px;">Résumé validé • +$11,547 en 5 semaines</div>
+  <div class="card">
+    <div class="ct">Règle des 3 bougies</div>
+    <div class="g4">
+      <div style="text-align:center;padding:9px 4px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);border-radius:8px;"><div style="font-size:16px;">🕯️</div><div style="font-size:7px;color:var(--gld);font-weight:700;margin-top:4px;">SPIKE</div><div style="font-size:7px;color:var(--mut);">Ne pas entrer</div></div>
+      <div style="text-align:center;padding:9px 4px;background:var(--s2);border-radius:8px;"><div style="font-size:16px;">1️⃣</div><div style="font-size:7px;color:var(--m2);font-weight:700;margin-top:4px;">BOUGIE 1</div><div style="font-size:7px;color:var(--mut);">Observer</div></div>
+      <div style="text-align:center;padding:9px 4px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.25);border-radius:8px;"><div style="font-size:16px;">2️⃣</div><div style="font-size:7px;color:var(--grn);font-weight:700;margin-top:4px;">BOUGIE 2</div><div style="font-size:7px;color:var(--grn);font-weight:700;">ENTRER ✅</div></div>
+      <div style="text-align:center;padding:9px 4px;background:var(--s2);border-radius:8px;"><div style="font-size:16px;">3️⃣</div><div style="font-size:7px;color:var(--blu);font-weight:700;margin-top:4px;">BOUGIE 3</div><div style="font-size:7px;color:var(--blu);">Sécuriser</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Les 4 positions</div>
+    <table class="tbl">
+      <thead><tr><th>Position</th><th>Formule</th><th>Prob</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td>Pos 1 MIN</td><td style="font-family:'Space Mono'">± 0.500</td><td><span class="tag tg">90%</span></td><td>Sécur.</td></tr>
+        <tr><td><b>Pos 2 AVG ⭐</b></td><td style="font-family:'Space Mono'"><b>± 0.808</b></td><td><span class="tag tg">75%</span></td><td style="color:var(--grn);">OPTIMAL</td></tr>
+        <tr><td>Pos 3 MAX</td><td style="font-family:'Space Mono'">± 1.500</td><td><span class="tag to">35%</span></td><td>Agressif</td></tr>
+        <tr><td>Pos 4 RUNNER</td><td style="font-family:'Space Mono'">± 0.808</td><td><span class="tag tg">75%</span></td><td>Trailing</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="g2">
+    <div class="card" style="background:rgba(232,64,64,0.04);border-color:rgba(232,64,64,0.18);">
+      <div class="ct" style="color:var(--red);">Interdictions</div>
+      ${['Trader Lundi','Sans Stop Loss','CPI/NFP/FED','Déplacer SL','Garder weekend','Spike < 50 pips','Zone orange','Ignorer DXY'].map(r=>`<div class="row"><div class="rd" style="background:var(--red);"></div><div class="rt">${r}</div></div>`).join('')}
+    </div>
+    <div class="card" style="background:rgba(46,204,113,0.04);border-color:rgba(46,204,113,0.18);">
+      <div class="ct" style="color:var(--grn);">Obligations</div>
+      ${['Fermeture M5','Confirmer 2-3 bougies','50% au TP1','SL breakeven','ForexFactory','DXY matin','Or XAU matin','20h00 vendredi'].map(r=>`<div class="row"><div class="rd" style="background:var(--grn);"></div><div class="rt">${r}</div></div>`).join('')}
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end content -->
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <div class="bnav-row">
+    <button class="nb on" onclick="goS('dash',this)"><span class="nb-i">🏠</span><span class="nb-l">Accueil</span></button>
+    <button class="nb" onclick="goS('ai',this)"><span class="nb-i">🤖</span><span class="nb-l">IA</span></button>
+    <button class="nb" onclick="goS('tech',this)"><span class="nb-i">📊</span><span class="nb-l">Technique</span></button>
+    <button class="nb" onclick="goS('fond',this)"><span class="nb-i">🌍</span><span class="nb-l">Fond.</span></button>
+    <button class="nb" onclick="goS('calc',this)"><span class="nb-i">🧮</span><span class="nb-l">Calc.</span></button>
+    <button class="nb" onclick="goS('strat',this)"><span class="nb-i">🎯</span><span class="nb-l">Stratégie</span></button>
+  </div>
+</div>
+</div><!-- end app -->
+
+<script>
+// ═══ PWA SERVICE WORKER ═══
+if('serviceWorker' in navigator){
+  const swCode = `
+const CACHE = 'silver-master-v3';
+const ASSETS = [self.location.href];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(nr => {
+    if(e.request.url.startsWith('http') && !e.request.url.includes('api.anthropic') && !e.request.url.includes('metals.live') && !e.request.url.includes('finance.yahoo')) {
+      caches.open(CACHE).then(c => c.put(e.request, nr.clone()));
+    }
+    return nr;
+  }).catch(() => caches.match(e.request))));
+});
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+// ═══ PWA INSTALL ═══
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  showInstallBanner();
+});
+function showInstallBanner(){
+  const z = document.getElementById('install-zone');
+  if(!z) return;
+  z.innerHTML = `<div class="install-banner">
+    <div class="install-text">
+      <div class="it">📲 Installer Silver Master</div>
+      <div class="is">Accéder depuis l'écran d'accueil — fonctionne hors ligne</div>
+    </div>
+    <button class="install-btn" onclick="doInstall()">Installer</button>
+  </div>`;
+}
+function doInstall(){
+  if(deferredInstall){
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(r => {
+      if(r.outcome === 'accepted') document.getElementById('install-zone').innerHTML='';
+      deferredInstall = null;
+    });
+  }
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-zone').innerHTML = '';
+});
+
+// ═══ DONNÉES JOURS ═══
+const DAYS = {
+  1:{n:"Lundi",a:"OBSERVER",c:"#6b7280",noT:true,ts:0,fs:40,
+    st:["Marquer <b>haut et bas</b> → range asiatique Mardi","Lundi monte → Mardi <b>SELL</b> | Lundi chute → Mardi <b>BUY</b> (75%)","<b>ForexFactory</b> → toutes les news rouges","Préparer <b>4 ordres LIMIT</b> pour 09h55 MT5"],
+    fi:["Pas de biais directionnel","Vérifier DXY direction soirée","Or XAU direction hebdomadaire ?","ForexFactory calendrier semaine"]},
+  2:{n:"Mardi",a:"SPIKE",c:"#e84040",ts:90,fs:72,
+    st:["<b>09h55 MT5</b> → Placer 4 ordres SELL ou BUY LIMIT","<b>10h00 MT5</b> → Spike Londres → ordres auto","Attendre <b>bougie 2 de confirmation</b>","Zone ORANGE = piège → attendre la <b>SORTIE</b>","TP1 → fermer <b>50%</b> → SL breakeven"],
+    fi:["DXY ce matin → hausse ou baisse ?","Or XAU → même direction que Lundi ?","News rouges ForexFactory ?","Spike > 50 pips ?"]},
+  3:{n:"Mercredi",a:"GÉRER",c:"#f0b429",ts:65,fs:58,
+    st:["Mardi spike+rejet → Mercredi <b>crash 37%</b>","Mardi hausse → Mercredi <b>continuation 25%</b>","Retest 30-40% → <b>SELL LIMIT</b>","<b>FED ce soir → Fermer TOUT avant 19h30</b>"],
+    fi:["FED decision ce soir ?","CPI publié ce matin ?","DXY même sens que Mardi ?","Fermer TOUT avant 19h30 si FED"]},
+  4:{n:"Jeudi",a:"SELL REBOND",c:"#a78bfa",ts:71,fs:65,
+    st:["Mercredi crash → <b>rebond</b> → SELL","Mercredi range → <b>BIG MOVE baissier</b>","Attendre <b>2-3 bougies M5</b> confirmation","<b>0.01 lot MAX</b> — marché volatile","SL large : <b>+0.700 pts min</b>"],
+    fi:["FED d'hier → hawkish ou dovish ?","DXY réaction post-FED ?","PMI publié ce matin ?","Or XAU en rebond ?"]},
+  5:{n:"Vendredi",a:"BUY REBOND",c:"#2ecc71",ts:71,fs:68,
+    st:["<b>09h55 MT5</b> → Identifier bas asiatique","Placer <b>4 BUY LIMIT</b> sous le bas","10h00 MT5 → Spike BUY → short covering","<b>FERMER TOUT avant 20h00 Abidjan</b>"],
+    fi:["NFP aujourd'hui (1er vendredi mois) ?","Jeudi a-t-il crashé ?","DXY faible ce matin ?","20h00 Abidjan planifié ?"]},
+  6:{n:"Samedi",a:"REPOS",c:"#2980b9",noT:true,ts:0,fs:0,
+    st:["Revoir trades — journal P&L","Analyser erreurs et bonnes décisions","Lire analyses Silver (Kitco, FXEmpire)","Préparer niveaux semaine suivante"],
+    fi:["Résumé macro hebdomadaire","DXY trend hebdo ?","Prochaine FED/CPI/NFP ?","Niveaux institutionnels semaine prochaine"]},
+  0:{n:"Dimanche",a:"PRÉPARER",c:"#2980b9",noT:true,ts:0,fs:0,
+    st:["Identifier niveaux institutionnels Silver","<b>ForexFactory</b> → TOUTES les news rouges","DXY et Or → biais pour Mardi","Marché rouvre <b>23h00 Abidjan</b>"],
+    fi:["ForexFactory calendrier complet","DXY weekly trend ?","Or XAU direction long terme ?","News majeures cette semaine ?"]}
+};
+
+const today = new Date().getDay();
+let live={xag:null,xau:null,dxy:null};
+let techDay=today;
+
+// ═══ NAVIGATION ═══
+function goS(name,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+name).classList.add('on');
+  el.classList.add('on');
+  document.querySelector('.content').scrollTop=0;
+}
+
+// ═══ PRIX LIVE ═══
+async function fetchPrices(){
+  let ok=false;
+  // Try 1: metals.live
+  try{
+    const r=await fetch('https://api.metals.live/v1/spot/silver,gold',{signal:AbortSignal.timeout(5000)});
+    if(r.ok){
+      const d=await r.json();
+      if(Array.isArray(d)){
+        d.forEach(item=>{
+          if(item.silver!=null) live.xag={price:item.silver,chg:null};
+          if(item.gold!=null)   live.xau={price:item.gold,chg:null};
+        });
+        ok=true;
+      }
+    }
+  }catch(e){}
+  // Try 2: frankfurter proxy for DXY approximation via EUR/USD inverse
+  if(!ok){
+    try{
+      const r=await fetch('https://api.frankfurter.app/latest?from=USD&to=XAG,XAU',{signal:AbortSignal.timeout(5000)});
+      if(r.ok){
+        const d=await r.json();
+        if(d.rates){
+          if(d.rates.XAG) live.xag={price:(1/d.rates.XAG).toFixed(3)*1,chg:null};
+          if(d.rates.XAU) live.xau={price:(1/d.rates.XAU).toFixed(2)*1,chg:null};
+          ok=true;
+        }
+      }
+    }catch(e){}
+  }
+  updatePriceUI();
+}
+
+function updatePriceUI(){
+  const f3=v=>v!=null?parseFloat(v).toFixed(3):'---';
+  const f0=v=>v!=null?Math.round(v):'---';
+  if(live.xag){
+    const p=f3(live.xag.price);
+    ['h-xag','cd-p','f-xag','c-live'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p;});
+    document.getElementById('h-xag').style.color='var(--gld)';
+  }
+  if(live.xau){
+    const p=f0(live.xau.price);
+    ['h-xau','f-xau'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=p;});
+    const sig=live.xau.price>2000?`$${p} ↑ haussier → Silver BUY`:`$${p} baissier → Silver SELL`;
+    const el=document.getElementById('f-or');if(el)el.textContent=sig;
+  }
+  if(live.xag&&live.xau){
+    const ratio=(live.xau.price/live.xag.price).toFixed(1);
+    ['cd-r','f-rat'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ratio;});
+  }
+  // DXY estimation shown as fixed
+  const dxyEst='~98.5';
+  ['f-dxy','f-dxy2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=dxyEst;});
+  const dxyEl=document.getElementById('f-dxy-d');if(dxyEl)dxyEl.textContent='Dollar faible — favorable Silver ✅';
+  const mEl=document.getElementById('dxy-m');if(mEl){mEl.style.width='65%';mEl.style.background='var(--grn)';}
+}
+
+// ═══ COUNTDOWN ═══
+function updateCD(){
+  const now=new Date();
+  const s=new Date(now);s.setUTCHours(8,0,0,0);
+  if(now>=s)s.setUTCDate(s.getUTCDate()+1);
+  while(s.getDay()===0||s.getDay()===6)s.setUTCDate(s.getUTCDate()+1);
+  const diff=s-now;
+  const h=Math.floor(diff/3600000);const m=Math.floor((diff%3600000)/60000);
+  const el=document.getElementById('cd-t');
+  if(el){el.textContent=`${String(h).padStart(2,'0')}h${String(m).padStart(2,'0')}`;el.style.color=h<1?'var(--red)':h<3?'var(--gld)':'var(--m2)';}
+}
+
+// ═══ DASHBOARD ═══
+function initDash(){
+  const d=DAYS[today];
+  const ds=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('day-banner').innerHTML=`<div style="background:linear-gradient(135deg,rgba(${today===2?'232,64,64':today===5?'46,204,113':today===4?'167,139,250':'107,114,128'},0.1),transparent);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px;"><div><div style="font-size:19px;font-weight:800;color:${d.c};">${d.n}</div><div style="font-size:8px;color:var(--mut);">${ds} • ${d.a}</div></div>${d.noT?'<span class="tag tgr">NE PAS TRADER</span>':'<span class="tag tr">JOUR DE TRADING</span>'}</div>`;
+  const ts=d.ts,fs=d.fs,gs=ts?Math.round((ts+fs)/2):0;
+  document.getElementById('sc-t').textContent=ts||'—';
+  document.getElementById('sc-f').textContent=fs||'—';
+  document.getElementById('sc-g').textContent=gs||'—';
+  const vEl=document.getElementById('sc-v');
+  if(gs>70){vEl.className='alert ag';vEl.innerHTML='<b>CONDITIONS IDÉALES</b> — Entrer avec conviction maximale';}
+  else if(gs>40){vEl.className='alert ao';vEl.innerHTML='<b>CONDITIONS CORRECTES</b> — Lots réduits recommandés';}
+  else{vEl.className='alert ar';vEl.innerHTML='<b>REPOS / OBSERVATION</b> — Ne pas forcer de trades';}
+  document.getElementById('d-tech').innerHTML=`<div style="font-size:15px;font-weight:800;color:${d.c};margin-bottom:7px;">${d.a}</div>${d.st.slice(0,2).map(s=>`<div class="row"><div class="rd" style="background:${d.c};"></div><div class="rt">${s}</div></div>`).join('')}`;
+  document.getElementById('d-fond').innerHTML=`<div style="font-size:15px;font-weight:800;color:var(--pur);margin-bottom:7px;">VÉRIFIER</div>${d.fi.slice(0,3).map(s=>`<div class="row"><div class="rd" style="background:var(--pur);"></div><div class="rt">${s}</div></div>`).join('')}`;
+  const chks=['ForexFactory — aucune news rouge','DXY vérifié ce matin','Or XAU vérifié ce matin','Range asiatique marqué sur graphique','Ordres LIMIT prêts à 09h55 MT5'];
+  document.getElementById('chklist').innerHTML=chks.map((c,i)=>`<div class="ci" id="ci${i}" onclick="tC(${i})"><div class="cb" id="cb${i}"></div><span class="ctxt" id="ct${i}">${c}</span></div>`).join('');
+  document.getElementById('chk-p').textContent='0/5';
+  document.getElementById('d-alerts').innerHTML=[
+    today===3?{c:'ar',t:'🚨 FED CE SOIR — 19h00 Abidjan',d:'Fermer TOUT avant 19h00 — NE PAS ouvrir de positions'}:
+    today===4?{c:'ao',t:'Post-FED — Lots réduits 0.01',d:'Attendre 2-3 bougies M5 de confirmation'}:
+    {c:'ag',t:'Pas de news critiques',d:'Conditions normales — stratégie spike standard'},
+    {c:'ab',t:'Tensions Iran/USA actives',d:'Premium refuge — Silver bénéficie du contexte géopolitique'},
+  ].map(a=>`<div class="alert ${a.c}"><b>${a.t}</b><br>${a.d}</div>`).join('');
+}
+
+function tC(i){
+  const item=document.getElementById('ci'+i);const box=document.getElementById('cb'+i);
+  const on=box.classList.toggle('on');item.classList.toggle('dn',on);box.textContent=on?'✓':'';
+  const n=document.querySelectorAll('.cb.on').length;
+  document.getElementById('chk-p').textContent=n===5?'5/5 ✅':`${n}/5`;
+}
+
+// ═══ TECHNIQUE ═══
+function initTech(){
+  const order=[1,2,3,4,5,6,0];
+  document.getElementById('dpills').innerHTML=order.map(d=>{
+    const info=DAYS[d];const isT=d===today;
+    return `<div class="dp" id="dp${d}" style="${isT?`border-color:${info.c};border-width:2px;`:''}" onclick="showDay(${d})"><div class="dn" style="color:${isT?info.c:'var(--m2)'};">${info.n}</div><div class="da">${info.a}</div></div>`;
+  }).join('');
+  showDay(today);
+}
+function showDay(d){
+  document.querySelectorAll('.dp').forEach(p=>{p.style.borderColor='';p.style.borderWidth='';p.querySelector('.dn').style.color='var(--m2)';});
+  const pill=document.getElementById('dp'+d);
+  if(pill){pill.style.borderColor=DAYS[d].c;pill.style.borderWidth='2px';pill.querySelector('.dn').style.color=DAYS[d].c;}
+  techDay=d;const info=DAYS[d];
+  let h=`<div class="card" style="border-left:3px solid ${info.c};"><div style="font-size:15px;font-weight:800;color:${info.c};margin-bottom:4px;">${info.n} — ${info.a}</div>`;
+  if(!info.noT){
+    h+=`<div class="g4" style="margin:8px 0;">
+      <div class="stat"><div class="sv" style="color:${info.c};font-size:12px;">09h55</div><div class="sl">Ordres</div></div>
+      <div class="stat"><div class="sv" style="color:var(--red);font-size:12px;">10h00</div><div class="sl">SPIKE</div></div>
+      <div class="stat"><div class="sv" style="color:var(--grn);font-size:12px;">10h10</div><div class="sl">Entrer</div></div>
+      <div class="stat"><div class="sv" style="color:var(--m2);font-size:12px;">10h15</div><div class="sl">Sécuriser</div></div>
+    </div>`;
+  }
+  h+=`<div class="div"></div>`;
+  info.st.forEach(s=>{h+=`<div class="row"><div class="rd" style="background:${info.c};"></div><div class="rt">${s}</div></div>`;});
+  h+=`</div>`;
+  if(!info.noT){
+    h+=`<div class="card"><div class="ct">Points d'entrée</div>
+    <table class="tbl"><thead><tr><th>Pos</th><th>Formule</th><th>Prob</th><th>Rôle</th></tr></thead><tbody>
+    <tr><td>Pos 1</td><td style="font-family:'Space Mono'">± 0.500</td><td><span class="tag tg">90%</span></td><td>Sécur.</td></tr>
+    <tr><td><b>Pos 2 ⭐</b></td><td style="font-family:'Space Mono'"><b>± 0.808</b></td><td><span class="tag tg">75%</span></td><td style="color:var(--grn);">OPTIMAL</td></tr>
+    <tr><td>Pos 3</td><td style="font-family:'Space Mono'">± 1.500</td><td><span class="tag to">35%</span></td><td>Agressif</td></tr>
+    <tr><td>Pos 4</td><td style="font-family:'Space Mono'">± 0.808</td><td><span class="tag tg">75%</span></td><td>Trailing</td></tr>
+    </tbody></table></div>`;
+  }
+  h+=`<div class="card"><div class="ct">🌍 Checklist Fondamentale</div>${info.fi.map(f=>`<div class="row"><div class="rd" style="background:var(--pur);"></div><div class="rt">${f}</div></div>`).join('')}</div>`;
+  document.getElementById('tech-c').innerHTML=h;
+}
+
+
+
+// ═══ ANALYSE INTÉGRÉE HORS LIGNE ═══
+function runAI(){
+  const d=DAYS[today];
+  const now=new Date();
+  const ds=now.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const t2=now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("ai-ts").textContent="Généré le "+ds+" à "+t2;
+  document.getElementById("ai-dt").textContent=ds;
+  const A={
+    0:{a:"Silver consolide autour de $67-68 après la correction post-FED Mars 2026. Déficit 117M oz et tensions Iran/USA maintiennent un plancher solide. Marché rouvre à 23h00 Abidjan — observer l'ouverture Asie pour identifier le biais.",b:"NE PAS TRADER",be:"Dimanche = préparation uniquement",r:"FAIBLE",re:"Pas d'activité trading",c1:"ForexFactory → noter TOUTES les news rouges de la semaine",c2:"Identifier niveaux institutionnels Silver sur MT5",c3:"Préparer 4 ordres LIMIT pour Mardi 09h55 MT5",n:"Support: $66.578 | Résistance: $81.376 | Objectif: $75-78"},
+    1:{a:"Silver ouvre en zone de manipulation institutionnelle. Faux moves dans les 2 sens pour piéger les retail. Observer Lundi pour anticiper le spike de Mardi.",b:"NE PAS TRADER",be:"Lundi = accumulation = piège retail",r:"FAIBLE",re:"Ne pas trader ce jour",c1:"Marquer HAUT et BAS de la journée → range asiatique Mardi",c2:"Lundi monte → préparer SELL Mardi | Lundi chute → préparer BUY Mardi",c3:"Vérifier ForexFactory → news rouges cette semaine ?",n:"Observer range | Haut asiatique → SELL Mardi | Bas asiatique → BUY Mardi"},
+    2:{a:"Mardi = meilleur jour Silver 85% succès. Spike Londres 10h00 MT5 casse le range asiatique systématiquement. FED hawkish + DXY faible + déficit Silver → biais baissier court terme confirmé.",b:"BAISSIER",be:"Spike SELL attendu sur haut asiatique à 10h00 MT5",r:"MOYEN",re:"Vérifier ForexFactory avant les ordres",c1:"09h55 MT5 : identifier haut/bas asiatique (bougies 01h00-10h00 MT5)",c2:"4 SELL LIMIT : Haut+0.500 / Haut+0.808⭐ / Haut+1.500 / Haut+0.808 runner",c3:"TP1 atteint → fermer 50% → SL breakeven → laisser courir TP2 et TP3",n:"Support: $66.578 | Résistance: $81.376 | Spike moyen: 149 pips"},
+    3:{a:"Mercredi suit Mardi : crash 37% / continuation 25% / range 38%. FED possible ce soir = spike 2-3x plus grand. Silver sous pression FED hawkish 3.5-3.75%.",b:"BAISSIER",be:"Continuation Mardi ou rebond technique à shorter",r:"CRITIQUE",re:"FED possible — fermer TOUT avant 19h30 Abidjan",c1:"Mardi spike+rejet → SELL | Mardi hausse → SELL LIMIT sur retest 30-40%",c2:"URGENT : FED ce soir ? → Fermer TOUT avant 19h30 Abidjan",c3:"2-3 bougies M5 confirmation avant d'entrer — ne pas se précipiter",n:"Retest Mardi -30-40% | Support: $66.578 | FED = 300-500 pips move"},
+    4:{a:"Jeudi 71% baissier — digestion FED du Mercredi. DXY réaction post-FED → Silver sous pression. Move moyen -500 pips. Lots réduits obligatoires.",b:"BAISSIER",be:"71% jeudis baissiers — SELL sur rebond technique",r:"ÉLEVÉ",re:"Post-FED très volatile — lots réduits obligatoires",c1:"Attendre rebond technique après crash Mercredi → SELL sur résistance",c2:"0.01 lot MAX — SL large +0.700 pts minimum",c3:"2-3 bougies M5 confirmation à 10h00 MT5 avant d'entrer",n:"Rebond vers résistance puis rechute | Record observé: -1300 pips"},
+    5:{a:"Vendredi 0% de sessions baissières sur 8 semaines. Short covering systématique avant weekend crée rebond 71% fiable. Institutionnels rééquilibrent positions.",b:"HAUSSIER",be:"Short covering garanti — 0% vendredis baissiers",r:"FAIBLE",re:"Conditions idéales — respecter fermeture 20h00 Abidjan",c1:"09h55 MT5 : identifier BAS asiatique → placer 4 BUY LIMIT dessous",c2:"Bas-0.500 / Bas-0.808⭐ / Bas-1.300 / Bas-0.808 runner → short covering",c3:"FERMER TOUT avant 20h00 Abidjan — jamais garder le weekend",n:"BUY sur bas asiatique | Move moyen +250 pips | Fermeture 20h00 obligatoire"},
+    6:{a:"Silver consolide après la semaine. Déficit 117M oz + tensions Iran/USA = plancher solide long terme. Weekend = révision des trades.",b:"NE PAS TRADER",be:"Samedi = repos et révision",r:"FAIBLE",re:"Aucun trading ce jour",c1:"Revoir tous les trades de la semaine — noter les erreurs",c2:"Lire analyses Silver sur Kitco.com et FXEmpire.com",c3:"Préparer niveaux institutionnels pour la semaine prochaine",n:"Support LT: $66.578 | Objectif 2026: $81-100 (JPMorgan/BofA)"}
+  };
+  const p=A[today];
+  const bc={"HAUSSIER":"var(--grn)","BAISSIER":"var(--red)","NE PAS TRADER":"var(--red)","NEUTRE":"var(--gld)"};
+  const rc={"FAIBLE":"var(--grn)","MOYEN":"var(--gld)","ÉLEVÉ":"var(--org)","CRITIQUE":"var(--red)"};
+  document.getElementById("ai-txt").innerHTML="<b>Situation :</b> "+p.a+"<br><br><b>Niveaux clés :</b> "+p.n;
+  document.getElementById("ai-b").innerHTML='<span style="color:'+bc[p.b]+';">'+p.b+'</span><div style="font-size:8px;color:var(--mut);margin-top:2px;">'+p.be+'</div>';
+  document.getElementById("ai-r").innerHTML='<span style="color:'+rc[p.r]+';">'+p.r+'</span><div style="font-size:8px;color:var(--mut);margin-top:2px;">'+p.re+'</div>';
+  document.getElementById("ai-tips").innerHTML=[p.c1,p.c2,p.c3].map(c=>'<div class="row"><div class="rd" style="background:var(--pur);"></div><div class="rt">'+c+'</div></div>').join("");
+}
+
+// ═══ CALCULATEUR ═══
+function cSell(){
+  const h=parseFloat(document.getElementById('si').value);if(isNaN(h))return;
+  document.getElementById('sr').innerHTML=`
+    <div class="cline"><span class="ck">SL commun</span><span class="cv" style="color:var(--red);">${(h+2).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">TP1 proche</span><span class="cv" style="color:var(--grn);">${(h-0.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">TP2 loin</span><span class="cv" style="color:var(--grn);">${(h-1.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 1 MIN</span><span class="cv" style="color:var(--red);">${(h+0.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 2 AVG ⭐</span><span class="cv" style="color:var(--red);">${(h+0.808).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 3 MAX</span><span class="cv" style="color:var(--red);">${(h+1.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 4 RUNNER</span><span class="cv" style="color:var(--red);">${(h+0.808).toFixed(3)}</span></div>`;
+  document.getElementById('sr').style.display='block';
+}
+function cBuy(){
+  const l=parseFloat(document.getElementById('bi').value);if(isNaN(l))return;
+  document.getElementById('br').innerHTML=`
+    <div class="cline"><span class="ck">SL commun</span><span class="cv" style="color:var(--red);">${(l-1.8).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">TP1 proche</span><span class="cv" style="color:var(--grn);">${(l+0.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">TP2 loin</span><span class="cv" style="color:var(--grn);">${(l+1.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 1 MIN</span><span class="cv" style="color:var(--grn);">${(l-0.5).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 2 AVG ⭐</span><span class="cv" style="color:var(--grn);">${(l-0.808).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 3 MAX</span><span class="cv" style="color:var(--grn);">${(l-1.3).toFixed(3)}</span></div>
+    <div class="cline"><span class="ck">Pos 4 RUNNER</span><span class="cv" style="color:var(--grn);">${(l-0.808).toFixed(3)}</span></div>`;
+  document.getElementById('br').style.display='block';
+}
+
+// ═══ LAUNCH ═══
+initDash();initTech();setTimeout(runAI,300);
+fetchPrices();updateCD();
+document.getElementById('ai-dt').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+// Restore API key from session
+// analyse offline - pas de clé API nécessaire
+setInterval(updateCD,30000);
+setInterval(fetchPrices,60000);
+</script>
+</body>
+</html>
